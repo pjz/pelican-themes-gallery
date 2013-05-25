@@ -5,7 +5,7 @@ import shutil
 import contextlib
 from fabricate import run, shell, autoclean, main
 
-SITEURL="http://pelican-themes.place.org/"
+SITEURL="http://pelican-themes-gallery.place.org/"
 PEL_BASE='pelican-base'
 THEMES="themes"
 THEMES_URL="git://github.com/getpelican/pelican-themes.git"
@@ -40,7 +40,7 @@ def pelican():
     debug(lambda: "Installing pelican")
     if os.path.exists(PEL_BASE): return
     run('virtualenv', PEL_BASE)
-    for package in [ 'pelican', 'webassets', 'cssmin' ]:
+    for package in [ 'Jinja2==2.6', 'pelican', 'webassets', 'cssmin' ]:
         run(_pelcmd('pip'), 'install', package)
 
 def clean_pelican():
@@ -81,10 +81,11 @@ def build():
     indexfilename = os.path.join(DESTDIR, "index.html")
     with open(indexfilename, "w") as indexfile:
         for name in os.listdir(THEMES):
+            if name in [ ".git" ]: continue
             path = os.path.join(THEMES, name)
             if os.path.isdir(path):
                 dest_theme = os.path.join(DESTDIR, name)
-		if os.path.isdir(dest_theme): continue
+                if os.path.isdir(dest_theme): continue
                 conf_file = os.path.join(THEMES, "configure-theme-" + name + ".py")
                 shutil.copyfile("ipsumconf.py", conf_file)
                 with open(conf_file, "a") as conf:
@@ -94,8 +95,13 @@ def build():
                         conf.write('PLUGINS=["assets"]\n')
                 os.mkdir(dest_theme)
                 run(_pelcmd('pelican'), '-t', path, '-o', dest_theme, '-s', conf_file, 'content')
-                indexfile.write('<h1><a href="' + name + '>' + name + '</a>')
-                indexfile.write(' - <a href="' + THEMELINKBASE + name + '">source</a></h1>\n<hr />')
+                indexfile.write('<h1><a href="' + name + '">' + name + '</a>')
+                indexfile.write(' - <a href="' + THEMELINKBASE + name + '">source</a></h1>\n')
+		theme_screenshot = os.path.join(THEMES, name, "screenshot.png")
+                if os.path.exists(theme_screenshot):
+                    indexfile.write('<img src="' + name + '/screenshot.png">\n')
+		    run('cp', theme_screenshot, dest_theme)
+                indexfile.write('<hr />\n')
 
 
 def clean_build():
