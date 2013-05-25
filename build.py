@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import sys
 import shutil
 import contextlib
 from fabricate import run, shell, autoclean, main
@@ -113,8 +114,20 @@ def clean():
     autoclean()
     clean_build()
     clean_themes()
+    clean_plugins()
     clean_pelican()
 
+def show_targets():
+    print("""Valid targets:
 
-main()
+        pelican - install pelican into pelican-base/
+        themes - check out the themes repo and all submodules into themes/
+        plugins - check out the plugins repo and all submodules into plugins/
+	build - build all the ipsum sites into meta-out/
+        clean_{pelican,themes,plugins,build} - remove individual build artifacts
+	clean - remove all build artifacts
+    """)
+    sys.exit()
+
+main(default='show_targets')
 

@@ -1,2 +1,6 @@
 *.pyc
 /.deps
+/meta-out
+/pelican-base
+/plugins
+/themes
