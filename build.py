@@ -3,6 +3,8 @@
 import os
 import sys
 import shutil
+import optparse
+import tempfile
 import contextlib
 from fabricate import run, shell, autoclean, main
 
@@ -11,7 +13,7 @@ PEL_BASE='pelican-base'
 THEMES="themes"
 THEMES_URL="git://github.com/getpelican/pelican-themes.git"
 THEMELINKBASE="http://github.com/getpelican/pelican-themes/tree/master/"
-DESTDIR="meta-out"
+BUILD_DIR="meta-out"
 
 def debug_noop(*args):
     pass
@@ -74,18 +76,19 @@ def clean_plugins():
 
 
 def build():
+    build_dir = BUILD_DIR
     pelican()
     themes()
     plugins()
     debug(lambda: "Building index and blogs")
-    if not os.path.isdir(DESTDIR): os.mkdir(DESTDIR)
-    indexfilename = os.path.join(DESTDIR, "index.html")
+    if not os.path.isdir(build_dir): os.mkdir(build_dir)
+    indexfilename = os.path.join(build_dir, "index.html")
     with open(indexfilename, "w") as indexfile:
         for name in os.listdir(THEMES):
             if name in [ ".git" ]: continue
             path = os.path.join(THEMES, name)
             if os.path.isdir(path):
-                dest_theme = os.path.join(DESTDIR, name)
+                dest_theme = os.path.join(build_dir, name)
                 if os.path.isdir(dest_theme): continue
                 conf_file = os.path.join(THEMES, "configure-theme-" + name + ".py")
                 shutil.copyfile("ipsumconf.py", conf_file)
@@ -104,10 +107,13 @@ def build():
 		    run('cp', theme_screenshot, dest_theme)
                 indexfile.write('<hr />\n')
 
+def publish():
+    DESTDIR = main.options.DESTDIR or BUILD_DIR
+    run('rsync', '-av', '--del', BUILD_DIR + '/', DESTDIR)
 
 def clean_build():
     debug(lambda: "Cleaning index and blogs")
-    shell("rm", "-rf", DESTDIR)
+    shell("rm", "-rf", BUILD_DIR)
 
 
 def clean():
@@ -124,10 +130,15 @@ def show_targets():
         themes - check out the themes repo and all submodules into themes/
         plugins - check out the plugins repo and all submodules into plugins/
 	build - build all the ipsum sites into meta-out/
+	publish - sync from meta-out/ to the dest specified with -O
         clean_{pelican,themes,plugins,build} - remove individual build artifacts
 	clean - remove all build artifacts
     """)
     sys.exit()
 
-main(default='show_targets')
+output_option = optparse.make_option("-O", "--output", action="store", type="string", dest="DESTDIR",
+		help="output directory")
+extra_options = [ output_option ]
+
+main(default='show_targets', extra_options=extra_options)
 
