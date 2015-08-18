@@ -4,7 +4,6 @@ import os
 import sys
 import shutil
 import optparse
-import tempfile
 import contextlib
 from fabricate import run, shell, autoclean, main
 
@@ -24,14 +23,14 @@ def debug_stdout(arg):
 debug = debug_stdout
 
 # random utility
-@contextlib.contextmanager  
-def chdir(dirname=None):  
-    curdir = os.getcwd()  
-    try:  
-        if dirname is not None:  
-            os.chdir(dirname)  
-        yield  
-    finally:  
+@contextlib.contextmanager
+def chdir(dirname=None):
+    curdir = os.getcwd()
+    try:
+        if dirname is not None:
+            os.chdir(dirname)
+        yield
+    finally:
         os.chdir(curdir)
 
 # real work starts here
@@ -98,13 +97,13 @@ def build():
                         conf.write('PLUGIN_PATH="plugins"\n')
                         conf.write('PLUGINS=["assets"]\n')
                 os.mkdir(dest_theme)
-                run(_pelcmd('pelican'), '-t', path, '-o', dest_theme, '-s', conf_file, 'content')
+                run(_pelcmd('pelican'), '-t', path, '-o', dest_theme, '-s', conf_file, 'content', ignore_status=True)
                 indexfile.write('<h1><a href="' + name + '">' + name + '</a>')
                 indexfile.write(' - <a href="' + THEMELINKBASE + name + '">source</a></h1>\n')
-		theme_screenshot = os.path.join(THEMES, name, "screenshot.png")
+                theme_screenshot = os.path.join(THEMES, name, "screenshot.png")
                 if os.path.exists(theme_screenshot):
                     indexfile.write('<img src="' + name + '/screenshot.png">\n')
-		    run('cp', theme_screenshot, dest_theme)
+                    run('cp', theme_screenshot, dest_theme)
                 indexfile.write('<hr />\n')
 
 def publish():
@@ -129,15 +128,15 @@ def show_targets():
         pelican - install pelican into pelican-base/
         themes - check out the themes repo and all submodules into themes/
         plugins - check out the plugins repo and all submodules into plugins/
-	build - build all the ipsum sites into meta-out/
-	publish - sync from meta-out/ to the dest specified with -O
+        build - build all the ipsum sites into meta-out/
+        publish - sync from meta-out/ to the dest specified with -O
         clean_{pelican,themes,plugins,build} - remove individual build artifacts
-	clean - remove all build artifacts
+        clean - remove all build artifacts
     """)
     sys.exit()
 
 output_option = optparse.make_option("-O", "--output", action="store", type="string", dest="DESTDIR",
-		help="output directory")
+                help="output directory")
 extra_options = [ output_option ]
 
 main(default='show_targets', extra_options=extra_options)
