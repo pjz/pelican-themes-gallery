@@ -86,25 +86,27 @@ def build():
         for name in os.listdir(THEMES):
             if name in [ ".git" ]: continue
             path = os.path.join(THEMES, name)
-            if os.path.isdir(path):
-                dest_theme = os.path.join(build_dir, name)
-                if os.path.isdir(dest_theme): continue
-                conf_file = os.path.join(THEMES, "configure-theme-" + name + ".py")
-                shutil.copyfile("ipsumconf.py", conf_file)
-                with open(conf_file, "a") as conf:
-                    conf.write('SITEURL="' + SITEURL + name + '"\n')
-                    if name == 'syte':
-                        conf.write('PLUGIN_PATH="plugins"\n')
-                        conf.write('PLUGINS=["assets"]\n')
-                os.mkdir(dest_theme)
-                run(_pelcmd('pelican'), '-t', path, '-o', dest_theme, '-s', conf_file, 'content', ignore_status=True)
-                indexfile.write('<h1><a href="' + name + '">' + name + '</a>')
-                indexfile.write(' - <a href="' + THEMELINKBASE + name + '">source</a></h1>\n')
-                theme_screenshot = os.path.join(THEMES, name, "screenshot.png")
-                if os.path.exists(theme_screenshot):
-                    indexfile.write('<img src="' + name + '/screenshot.png">\n')
-                    run('cp', theme_screenshot, dest_theme)
-                indexfile.write('<hr />\n')
+            if not os.path.isdir(path): continue
+            dest_theme = os.path.join(build_dir, name)
+            if os.path.isdir(dest_theme): continue
+
+            conf_file = os.path.join(THEMES, "configure-theme-" + name + ".py")
+            shutil.copyfile("ipsumconf.py", conf_file)
+            with open(conf_file, "a") as conf:
+                conf.write('SITEURL="' + SITEURL + name + '"\n')
+                if name == 'syte':
+                    conf.write('PLUGIN_PATH="plugins"\n')
+                    conf.write('PLUGINS=["assets"]\n')
+            os.mkdir(dest_theme)
+            print(_pelcmd('pelican'), '-t', path, '-o', dest_theme, '-s', conf_file, 'content')
+            shell(_pelcmd('pelican'), '-t', path, '-o', dest_theme, '-s', conf_file, 'content', ignore_status=True, shell=True)
+            indexfile.write('<h1><a href="' + name + '">' + name + '</a>')
+            indexfile.write(' - <a href="' + THEMELINKBASE + name + '">source</a></h1>\n')
+            theme_screenshot = os.path.join(THEMES, name, "screenshot.png")
+            if os.path.exists(theme_screenshot):
+                indexfile.write('<img src="' + name + '/screenshot.png">\n')
+                run('cp', theme_screenshot, dest_theme)
+            indexfile.write('<hr />\n')
 
 def publish():
     DESTDIR = main.options.DESTDIR or BUILD_DIR
